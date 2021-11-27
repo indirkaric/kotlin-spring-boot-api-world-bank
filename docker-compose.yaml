@@ -1,0 +1,45 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      CATALINA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8888 -Dcom.sun.management.jmxremote.rmi.port=8891 -Dcom.sun.management.jmxremote.port=8891 -Dcom.sun.management.jmxremote.host=0.0.0.0  -Djava.rmi.server.hostname=0.0.0.0 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false  -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false"
+      JAVA_OPTS: -XshowSettings:vm -XX:MinRAMPercentage=5 -XX:MaxRAMPercentage=80 -XX:+HeapDumpOnOutOfMemoryError
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres123
+      DB_NAME: testdb
+      DB_PORT: 5432
+      DB_HOST: postgres
+    restart: always
+    ports:
+      - 8080:8080
+      - 8888:8888
+      - 8891:8891
+    volumes:
+      - ./lmData:/root/.lm
+    depends_on:
+      - postgres
+    networks:
+      test-app-network:
+        aliases:
+          - app
+  postgres:
+    container_name: postgres
+    image: postgres:12.3-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_DB=testdb
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    networks:
+      test-app-network:
+        aliases:
+          - postgres
+networks:
+  test-app-network:
+
